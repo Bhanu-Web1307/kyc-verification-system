@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kyc_user
+      POSTGRES_PASSWORD: kyc_pass
+      POSTGRES_DB: kyc_db
+    volumes:
+      - kyc_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://kyc_user:kyc_pass@db:5432/kyc_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-secret-in-production}
+      DOCUMENT_ENCRYPTION_KEY: ${DOCUMENT_ENCRYPTION_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - kyc_documents:/data/kyc_documents
+
+volumes:
+  kyc_db_data:
+  kyc_documents:
